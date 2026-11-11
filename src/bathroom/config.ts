@@ -4,7 +4,7 @@
 export const ROOM = {
 	width: 200, // x axis (left → right)
 	depth: 240, // z axis (back → front)
-	height: 260,
+	height: 215,
 	wallThickness: 10,
 } as const;
 
@@ -59,7 +59,7 @@ export const FIXTURES: Record<FixtureId, FixtureSpec> = {
 		h: 260,
 		size: "80×100 + wall",
 		description:
-			"Shower area 80 cm wide × 100 cm deep with a 10 cm tiled partition wall (floor to ceiling) on the toilet side, flush floor with linear drain, 20 cm fixed glass + 60 cm glass door, rain shower head.",
+			"Shower area 80 cm wide × 100 cm deep with a 10 cm tiled partition wall (floor to ceiling) on the toilet side, flush floor with linear drain, 20 cm fixed glass panel and a 60 cm open entrance (no door), rain shower head.",
 	},
 	washbasin: {
 		id: "washbasin",

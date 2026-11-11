@@ -242,38 +242,22 @@ export function Shower() {
 					<boxGeometry args={[w - 20, 0.3, 5]} />
 				</mesh>
 
-				{/* Front: fixed panel 20 cm + door 60 cm */}
+				{/* Front: 20 cm fixed glass panel, remaining 60 cm open entrance */}
 				<mesh
 					position={[left + 10, glassH / 2 + 1, front - t / 2]}
 					material={materials.glass}
 				>
 					<boxGeometry args={[20, glassH, t]} />
 				</mesh>
+				{/* Black frame profiles around the fixed panel */}
 				<mesh
-					position={[left + 20 + 30, glassH / 2 + 1, front - t / 2]}
-					material={materials.glass}
-				>
-					<boxGeometry args={[59.4, glassH, t]} />
-				</mesh>
-				{/* Door handle */}
-				<mesh position={[left + 23, 105, front + 2]} material={materials.black}>
-					<boxGeometry args={[1.5, 40, 1.5]} />
-				</mesh>
-				{/* Black frame profiles */}
-				<mesh
-					position={[0, glassH + 1.5, front - 0.4]}
+					position={[left + 10, glassH + 1.5, front - 0.4]}
 					material={materials.black}
 				>
-					<boxGeometry args={[w, 2, 2]} />
+					<boxGeometry args={[20, 2, 2]} />
 				</mesh>
 				<mesh
 					position={[left + 1, glassH / 2, front - 0.4]}
-					material={materials.black}
-				>
-					<boxGeometry args={[2, glassH + 2, 2.2]} />
-				</mesh>
-				<mesh
-					position={[w / 2 - 1, glassH / 2, front - 0.4]}
 					material={materials.black}
 				>
 					<boxGeometry args={[2, glassH + 2, 2.2]} />
@@ -287,21 +271,21 @@ export function Shower() {
 					material={materials.chrome}
 				/>
 				{/* Riser pipe + arm + rain head */}
-				<mesh position={[10, 160, back + 4]} material={materials.chrome}>
-					<cylinderGeometry args={[1.2, 1.2, 100, 16]} />
+				<mesh position={[10, 155, back + 4]} material={materials.chrome}>
+					<cylinderGeometry args={[1.2, 1.2, 90, 16]} />
 				</mesh>
 				<mesh
-					position={[10, 210, back + 4 + 18]}
+					position={[10, 200, back + 4 + 18]}
 					rotation={[Math.PI / 2, 0, 0]}
 					material={materials.chrome}
 				>
 					<cylinderGeometry args={[1, 1, 36, 16]} />
 				</mesh>
-				<mesh position={[10, 210, back + 4]} material={materials.chrome}>
+				<mesh position={[10, 200, back + 4]} material={materials.chrome}>
 					<sphereGeometry args={[1.4, 16, 16]} />
 				</mesh>
 				<mesh
-					position={[10, 208.5, back + 40]}
+					position={[10, 198.5, back + 40]}
 					material={materials.chrome}
 					castShadow
 				>
