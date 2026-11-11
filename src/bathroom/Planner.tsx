@@ -4,6 +4,8 @@ import {
 	constrain,
 	DEFAULT_LAYOUT,
 	DOOR,
+	DOOR_HINGE,
+	DOOR_Z,
 	FIXTURES,
 	type FixtureId,
 	footprint,
@@ -14,7 +16,7 @@ import {
 import type { WallMode } from "./Room";
 import { BathroomScene, type SceneOptions, type ViewName } from "./Scene";
 
-const STORAGE_KEY = "bathroom-layout-v2";
+const STORAGE_KEY = "bathroom-layout-v4";
 const IDS = Object.keys(FIXTURES) as FixtureId[];
 
 function loadLayout(): Layout {
@@ -42,15 +44,17 @@ function loadLayout(): Layout {
 
 /** Does the fixture block the inward-opening door's swing? */
 function blocksDoor(b: ReturnType<typeof bounds>) {
-	const hingeX = DOOR.hingeRight ? DOOR.x + DOOR.width : DOOR.x;
-	const hingeZ = ROOM.depth;
-	const minX = DOOR.hingeRight ? hingeX - DOOR.width : hingeX;
-	const maxX = DOOR.hingeRight ? hingeX : hingeX + DOOR.width;
-	if (b.maxX <= minX || b.minX >= maxX || b.maxZ <= hingeZ - DOOR.width)
+	const r = DOOR.width;
+	// Swing quadrant: from the right wall inward, between the opening's ends.
+	if (
+		b.maxX <= DOOR_HINGE.x - r ||
+		b.maxZ <= DOOR_Z.start ||
+		b.minZ >= DOOR_Z.end
+	)
 		return false;
-	const cx = Math.min(Math.max(hingeX, b.minX), b.maxX);
-	const cz = Math.min(Math.max(hingeZ, b.minZ), b.maxZ);
-	return Math.hypot(cx - hingeX, cz - hingeZ) < DOOR.width;
+	const cx = Math.min(Math.max(DOOR_HINGE.x, b.minX), b.maxX);
+	const cz = Math.min(Math.max(DOOR_HINGE.z, b.minZ), b.maxZ);
+	return Math.hypot(cx - DOOR_HINGE.x, cz - DOOR_HINGE.z) < r;
 }
 
 const VIEW_BUTTONS: { name: ViewName; label: string }[] = [

@@ -8,13 +8,22 @@ export const ROOM = {
 	wallThickness: 10,
 } as const;
 
-// Door in the front wall (z = ROOM.depth), measured from the left wall.
+// Door in the right wall (x = ROOM.width, one of the long 240 cm walls),
+// next to the front corner. Hinge on the corner side, opens inward.
 export const DOOR = {
-	x: 110, // left edge of the opening
+	fromCorner: 10, // distance from the front wall to the opening
 	width: 80,
 	height: 211,
-	hingeRight: true, // hinge on the right side of the opening, swings inward
 } as const;
+
+/** Door opening along the right wall, in room z (cm from back wall). */
+export const DOOR_Z = {
+	start: ROOM.depth - DOOR.fromCorner - DOOR.width,
+	end: ROOM.depth - DOOR.fromCorner,
+} as const;
+
+/** Hinge position in room coordinates. */
+export const DOOR_HINGE = { x: ROOM.width, z: DOOR_Z.end } as const;
 
 export type FixtureId = "toilet" | "shower" | "washbasin";
 
@@ -45,21 +54,22 @@ export const FIXTURES: Record<FixtureId, FixtureSpec> = {
 	shower: {
 		id: "shower",
 		name: "Shower",
-		w: 110,
-		d: 80,
+		w: 90,
+		d: 100,
 		h: 260,
-		size: "100×80 + wall",
+		size: "80×100 + wall",
 		description:
-			"Shower area 100 × 80 cm with a 10 cm tiled partition wall (floor to ceiling) on the toilet side, flush floor with linear drain, 40 cm fixed glass + 60 cm glass door, rain shower head.",
+			"Shower area 80 cm wide × 100 cm deep with a 10 cm tiled partition wall (floor to ceiling) on the toilet side, flush floor with linear drain, 20 cm fixed glass + 60 cm glass door, rain shower head.",
 	},
 	washbasin: {
 		id: "washbasin",
 		name: "Washbasin",
 		w: 90,
 		d: 40,
-		h: 85,
+		h: 180,
+		size: "60 + 30×40",
 		description:
-			"Wall-hung vanity 90 × 40 cm, top at 85 cm, with integrated basin, tap and 90 × 70 cm mirror above.",
+			"90 × 40 cm in total: a 60 cm wall-hung vanity (top at 85 cm) with integrated basin, tap and 60 × 70 cm mirror, next to a 30 cm wide, 180 cm high closet.",
 	},
 };
 
@@ -73,10 +83,11 @@ export interface Placement {
 export type Layout = Record<FixtureId, Placement>;
 
 export const DEFAULT_LAYOUT: Layout = {
-	// Shower in the back-right corner: 10 cm wall + 100 cm shower along the back wall.
-	shower: { x: ROOM.width - 55, z: 40, rotation: 0 },
-	// Toilet on the back wall, centred in the 90 cm left of the shower wall.
-	toilet: { x: 45, z: 37, rotation: 0 },
+	// Shower in the back-right corner: 10 cm wall + 80 cm shower along the back
+	// wall, 100 cm deep along the right wall.
+	shower: { x: ROOM.width - 45, z: 50, rotation: 0 },
+	// Toilet on the back wall, centred in the 110 cm left of the shower wall.
+	toilet: { x: 55, z: 37, rotation: 0 },
 	// Washbasin on the left wall, back against x = 0.
 	washbasin: { x: 20, z: 160, rotation: 1 },
 };

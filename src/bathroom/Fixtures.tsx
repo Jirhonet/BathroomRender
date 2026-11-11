@@ -242,21 +242,21 @@ export function Shower() {
 					<boxGeometry args={[w - 20, 0.3, 5]} />
 				</mesh>
 
-				{/* Front: fixed panel 40 cm + door 60 cm */}
+				{/* Front: fixed panel 20 cm + door 60 cm */}
 				<mesh
-					position={[left + 20, glassH / 2 + 1, front - t / 2]}
+					position={[left + 10, glassH / 2 + 1, front - t / 2]}
 					material={materials.glass}
 				>
-					<boxGeometry args={[40, glassH, t]} />
+					<boxGeometry args={[20, glassH, t]} />
 				</mesh>
 				<mesh
-					position={[left + 40 + 30, glassH / 2 + 1, front - t / 2]}
+					position={[left + 20 + 30, glassH / 2 + 1, front - t / 2]}
 					material={materials.glass}
 				>
 					<boxGeometry args={[59.4, glassH, t]} />
 				</mesh>
 				{/* Door handle */}
-				<mesh position={[left + 43, 105, front + 2]} material={materials.black}>
+				<mesh position={[left + 23, 105, front + 2]} material={materials.black}>
 					<boxGeometry args={[1.5, 40, 1.5]} />
 				</mesh>
 				{/* Black frame profiles */}
@@ -321,8 +321,14 @@ export function Shower() {
 	);
 }
 
+export const CLOSET = { w: 30, h: 180 } as const;
+
 export function Washbasin() {
-	const { w, d } = FIXTURES.washbasin;
+	const { w: total, d } = FIXTURES.washbasin;
+	// 90 cm = 30 cm tall closet (local -x side) + 60 cm basin unit.
+	const w = total - CLOSET.w;
+	const basinX = total / 2 - w / 2;
+	const closetX = -total / 2 + CLOSET.w / 2;
 	const back = -d / 2;
 	const topY = 85;
 	const topT = 3;
@@ -343,7 +349,7 @@ export function Washbasin() {
 		s.lineTo(-w / 2, -d);
 		s.closePath();
 		const hole = new THREE.Path();
-		hole.absellipse(0, -d / 2 - 2, 26, 14, 0, Math.PI * 2, true, 0);
+		hole.absellipse(0, -d / 2 - 2, 20, 14, 0, Math.PI * 2, true, 0);
 		s.holes.push(hole);
 		const g = new THREE.ExtrudeGeometry(s, {
 			depth: topT,
@@ -370,113 +376,137 @@ export function Washbasin() {
 
 	return (
 		<group>
-			{/* Wall-hung vanity cabinet (open top section so the basin bowl shows) */}
-			<mesh
-				position={[0, (cabTop - cabinetH + 70) / 2, back + (d - 2) / 2]}
-				material={wood}
-				castShadow
-				receiveShadow
-			>
-				<boxGeometry args={[w, 70 - (cabTop - cabinetH), d - 2]} />
-			</mesh>
-			{(
-				[
-					[
-						[w, cabTop - 70, 1.8],
-						[0, (cabTop + 70) / 2, d / 2 - 2.9],
-					],
-					[
-						[w, cabTop - 70, 1.8],
-						[0, (cabTop + 70) / 2, back + 0.9],
-					],
-					[
-						[1.8, cabTop - 70, d - 2],
-						[-w / 2 + 0.9, (cabTop + 70) / 2, back + (d - 2) / 2],
-					],
-					[
-						[1.8, cabTop - 70, d - 2],
-						[w / 2 - 0.9, (cabTop + 70) / 2, back + (d - 2) / 2],
-					],
-				] as [[number, number, number], [number, number, number]][]
-			).map(([size, pos]) => (
-				<mesh key={pos.join()} position={pos} material={wood} castShadow>
-					<boxGeometry args={size} />
+			{/* Tall closet, floor to 180 cm */}
+			<group position={[closetX, 0, 0]}>
+				<mesh
+					position={[0, CLOSET.h / 2, back + (d - 2) / 2]}
+					material={wood}
+					castShadow
+					receiveShadow
+				>
+					<boxGeometry args={[CLOSET.w - 0.4, CLOSET.h, d - 2]} />
 				</mesh>
-			))}
-			{/* Drawer split + grip line */}
-			<mesh
-				position={[0, cabTop - cabinetH / 2, d / 2 - 1.9]}
-				material={materials.black}
-			>
-				<boxGeometry args={[w - 1, 0.4, 0.2]} />
-			</mesh>
-			<mesh
-				position={[0, cabTop - 2.5, d / 2 - 1.9]}
-				material={materials.black}
-			>
-				<boxGeometry args={[w - 1, 1.2, 0.3]} />
-			</mesh>
-
-			{/* Ceramic top with basin */}
-			<mesh
-				geometry={topGeo}
-				position={[0, cabTop, back]}
-				material={materials.ceramic}
-				castShadow
-				receiveShadow
-			/>
-			<mesh
-				geometry={basinGeo}
-				position={[0, topY, back + d / 2 + 2]}
-				scale={[26, 13, 14]}
-				receiveShadow
-			>
-				<meshStandardMaterial
-					color="#f3f3f1"
-					roughness={0.12}
-					side={THREE.DoubleSide}
-				/>
-			</mesh>
-			<mesh
-				position={[0, topY - 12.8, back + d / 2 + 2]}
-				rotation={[-Math.PI / 2, 0, 0]}
-				material={materials.chrome}
-			>
-				<circleGeometry args={[2, 24]} />
-			</mesh>
-
-			{/* Tap */}
-			<group position={[0, topY, back + 5]}>
-				<mesh position={[0, 9, 0]} material={materials.chrome}>
-					<cylinderGeometry args={[1.6, 1.8, 18, 24]} />
+				{/* Plinth shadow gap + vertical grip on the basin side */}
+				<mesh position={[0, 4, d / 2 - 1.9]} material={materials.black}>
+					<boxGeometry args={[CLOSET.w - 0.6, 0.4, 0.2]} />
 				</mesh>
 				<mesh
-					position={[0, 17, 6]}
-					rotation={[Math.PI / 2, 0, 0]}
-					material={materials.chrome}
+					position={[CLOSET.w / 2 - 2.5, 100, d / 2 - 1.9]}
+					material={materials.black}
 				>
-					<cylinderGeometry args={[1, 1, 13, 16]} />
-				</mesh>
-				<mesh
-					position={[0, 20, -0.5]}
-					rotation={[0.4, 0, 0]}
-					material={materials.chrome}
-				>
-					<boxGeometry args={[1.2, 1.2, 8]} />
+					<boxGeometry args={[1.2, 50, 0.3]} />
 				</mesh>
 			</group>
 
-			{/* Mirror */}
-			<RoundedBox
-				args={[w, 70, 1.5]}
-				radius={0.6}
-				position={[0, 140, back + 0.75]}
-				material={materials.mirror}
-			/>
-			{/* LED bar above mirror */}
-			<mesh position={[0, 178, back + 3]} material={materials.led}>
-				<boxGeometry args={[60, 1.5, 4]} />
-			</mesh>
+			<group position={[basinX, 0, 0]}>
+				{/* Wall-hung vanity cabinet (open top section so the basin bowl shows) */}
+				<mesh
+					position={[0, (cabTop - cabinetH + 70) / 2, back + (d - 2) / 2]}
+					material={wood}
+					castShadow
+					receiveShadow
+				>
+					<boxGeometry args={[w, 70 - (cabTop - cabinetH), d - 2]} />
+				</mesh>
+				{(
+					[
+						[
+							[w, cabTop - 70, 1.8],
+							[0, (cabTop + 70) / 2, d / 2 - 2.9],
+						],
+						[
+							[w, cabTop - 70, 1.8],
+							[0, (cabTop + 70) / 2, back + 0.9],
+						],
+						[
+							[1.8, cabTop - 70, d - 2],
+							[-w / 2 + 0.9, (cabTop + 70) / 2, back + (d - 2) / 2],
+						],
+						[
+							[1.8, cabTop - 70, d - 2],
+							[w / 2 - 0.9, (cabTop + 70) / 2, back + (d - 2) / 2],
+						],
+					] as [[number, number, number], [number, number, number]][]
+				).map(([size, pos]) => (
+					<mesh key={pos.join()} position={pos} material={wood} castShadow>
+						<boxGeometry args={size} />
+					</mesh>
+				))}
+				{/* Drawer split + grip line */}
+				<mesh
+					position={[0, cabTop - cabinetH / 2, d / 2 - 1.9]}
+					material={materials.black}
+				>
+					<boxGeometry args={[w - 1, 0.4, 0.2]} />
+				</mesh>
+				<mesh
+					position={[0, cabTop - 2.5, d / 2 - 1.9]}
+					material={materials.black}
+				>
+					<boxGeometry args={[w - 1, 1.2, 0.3]} />
+				</mesh>
+
+				{/* Ceramic top with basin */}
+				<mesh
+					geometry={topGeo}
+					position={[0, cabTop, back]}
+					material={materials.ceramic}
+					castShadow
+					receiveShadow
+				/>
+				<mesh
+					geometry={basinGeo}
+					position={[0, topY, back + d / 2 + 2]}
+					scale={[20, 13, 14]}
+					receiveShadow
+				>
+					<meshStandardMaterial
+						color="#f3f3f1"
+						roughness={0.12}
+						side={THREE.DoubleSide}
+					/>
+				</mesh>
+				<mesh
+					position={[0, topY - 12.8, back + d / 2 + 2]}
+					rotation={[-Math.PI / 2, 0, 0]}
+					material={materials.chrome}
+				>
+					<circleGeometry args={[2, 24]} />
+				</mesh>
+
+				{/* Tap */}
+				<group position={[0, topY, back + 5]}>
+					<mesh position={[0, 9, 0]} material={materials.chrome}>
+						<cylinderGeometry args={[1.6, 1.8, 18, 24]} />
+					</mesh>
+					<mesh
+						position={[0, 17, 6]}
+						rotation={[Math.PI / 2, 0, 0]}
+						material={materials.chrome}
+					>
+						<cylinderGeometry args={[1, 1, 13, 16]} />
+					</mesh>
+					<mesh
+						position={[0, 20, -0.5]}
+						rotation={[0.4, 0, 0]}
+						material={materials.chrome}
+					>
+						<boxGeometry args={[1.2, 1.2, 8]} />
+					</mesh>
+				</group>
+
+				{/* Mirror */}
+				<RoundedBox
+					args={[w, 70, 1.5]}
+					radius={0.6}
+					position={[0, 140, back + 0.75]}
+					material={materials.mirror}
+				/>
+				{/* LED bar above mirror */}
+				<mesh position={[0, 178, back + 3]} material={materials.led}>
+					<boxGeometry args={[40, 1.5, 4]} />
+				</mesh>
+			</group>
 		</group>
 	);
 }

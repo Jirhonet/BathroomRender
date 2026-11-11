@@ -2,7 +2,7 @@ import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { DOOR, ROOM } from "./config";
+import { DOOR, DOOR_Z, ROOM } from "./config";
 import { materials } from "./Fixtures";
 import { makeTileTexture, makeWallTileTexture, tiledBox } from "./textures";
 
@@ -16,24 +16,41 @@ type Piece = {
 	center: [number, number, number];
 };
 
-const doorRight = DOOR.x + DOOR.width;
-
 const WALLS: Record<WallId, Piece[]> = {
 	back: [{ size: [W + 2 * T, H, T], center: [W / 2, H / 2, -T / 2] }],
+	front: [{ size: [W + 2 * T, H, T], center: [W / 2, H / 2, D + T / 2] }],
 	left: [{ size: [T, H, D], center: [-T / 2, H / 2, D / 2] }],
-	right: [{ size: [T, H, D], center: [W + T / 2, H / 2, D / 2] }],
-	front: [
-		{ size: [DOOR.x + T, H, T], center: [(DOOR.x - T) / 2, H / 2, D + T / 2] },
+	// Right (long) wall with the door opening
+	right: [
 		{
-			size: [W - doorRight + T, H, T],
-			center: [(doorRight + W + T) / 2, H / 2, D + T / 2],
+			size: [T, H, DOOR_Z.start],
+			center: [W + T / 2, H / 2, DOOR_Z.start / 2],
 		},
 		{
-			size: [DOOR.width, H - DOOR.height, T],
-			center: [DOOR.x + DOOR.width / 2, (H + DOOR.height) / 2, D + T / 2],
+			size: [T, H, D - DOOR_Z.end],
+			center: [W + T / 2, H / 2, (DOOR_Z.end + D) / 2],
+		},
+		{
+			size: [T, H - DOOR.height, DOOR.width],
+			center: [
+				W + T / 2,
+				(H + DOOR.height) / 2,
+				(DOOR_Z.start + DOOR_Z.end) / 2,
+			],
 		},
 	],
 };
+
+// The door is modelled in a wall-local frame: x runs along the wall starting
+// at the front corner, the wall's inner face is z = 0 and the room is at -z.
+// This transform maps that frame onto the right wall:
+// (a, y, c) → (W + c, y, D - a).
+const DOOR_FRAME = {
+	position: [W, 0, D] as [number, number, number],
+	rotation: [0, Math.PI / 2, 0] as [number, number, number],
+};
+const S0 = DOOR.fromCorner; // hinge side (towards the corner)
+const S1 = DOOR.fromCorner + DOOR.width;
 
 /** Is the camera (in room cm coordinates) on the outside of this wall? */
 function cameraOutside(id: WallId, cam: THREE.Vector3) {
@@ -132,14 +149,11 @@ function Wall({
 	);
 }
 
+/** Door leaf hinged at S0, opening inward (towards local -z). */
 function Door({ open }: { open: boolean }) {
 	const pivot = useRef<THREE.Group>(null);
-	const hingeX = DOOR.hingeRight ? doorRight : DOOR.x;
-	const dir = DOOR.hingeRight ? -1 : 1;
 	const leafT = 4;
-	const target = open
-		? (DOOR.hingeRight ? -1 : 1) * THREE.MathUtils.degToRad(80)
-		: 0;
+	const target = open ? THREE.MathUtils.degToRad(80) : 0;
 
 	useFrame((_, delta) => {
 		if (!pivot.current) return;
@@ -153,23 +167,20 @@ function Door({ open }: { open: boolean }) {
 
 	const leafW = DOOR.width - 1;
 	return (
-		<group ref={pivot} position={[hingeX, 0, D - leafT / 2]}>
-			<group position={[(dir * leafW) / 2, 0, 0]}>
+		<group ref={pivot} position={[S0, 0, -leafT / 2]}>
+			<group position={[leafW / 2, 0, 0]}>
 				<mesh position={[0, DOOR.height / 2, 0]} castShadow receiveShadow>
 					<boxGeometry args={[leafW, DOOR.height - 1, leafT]} />
 					<meshStandardMaterial color="#f2f1ee" roughness={0.5} />
 				</mesh>
 				{/* Lever handles both sides */}
 				{[-1, 1].map((s) => (
-					<group
-						key={s}
-						position={[(dir * leafW) / 2 - dir * 7, 105, s * (leafT / 2 + 2.5)]}
-					>
+					<group key={s} position={[leafW / 2 - 7, 105, s * (leafT / 2 + 2.5)]}>
 						<mesh rotation={[Math.PI / 2, 0, 0]} material={materials.chrome}>
 							<cylinderGeometry args={[0.9, 0.9, 5, 12]} />
 						</mesh>
 						<mesh
-							position={[-dir * 6, 0, s * 2.5]}
+							position={[-6, 0, s * 2.5]}
 							rotation={[0, 0, Math.PI / 2]}
 							material={materials.chrome}
 						>
@@ -182,20 +193,42 @@ function Door({ open }: { open: boolean }) {
 	);
 }
 
+function DoorFrame() {
+	return (
+		<>
+			<mesh
+				position={[S0 - 1.5, DOOR.height / 2, T / 2]}
+				material={materials.wallWhite}
+			>
+				<boxGeometry args={[3, DOOR.height, T + 2]} />
+			</mesh>
+			<mesh
+				position={[S1 + 1.5, DOOR.height / 2, T / 2]}
+				material={materials.wallWhite}
+			>
+				<boxGeometry args={[3, DOOR.height, T + 2]} />
+			</mesh>
+			<mesh
+				position={[(S0 + S1) / 2, DOOR.height + 1.5, T / 2]}
+				material={materials.wallWhite}
+			>
+				<boxGeometry args={[DOOR.width + 6, 3, T + 2]} />
+			</mesh>
+		</>
+	);
+}
+
 function DoorSwing() {
-	const hingeX = DOOR.hingeRight ? doorRight : DOOR.x;
 	const points = useMemo(() => {
-		const pts: [number, number, number][] = [];
 		const r = DOOR.width;
+		const pts: [number, number, number][] = [[S0, 0.6, 0]];
 		for (let i = 0; i <= 48; i++) {
 			const a = (i / 48) * (Math.PI / 2);
-			const dx = (DOOR.hingeRight ? -1 : 1) * Math.cos(a) * r;
-			pts.push([hingeX + dx, 0.6, D - Math.sin(a) * r]);
+			pts.push([S0 + Math.cos(a) * r, 0.6, -Math.sin(a) * r]);
 		}
-		pts.push([hingeX, 0.6, D]);
-		pts.unshift([hingeX, 0.6, D]);
+		pts.push([S0, 0.6, 0]);
 		return pts;
-	}, [hingeX]);
+	}, []);
 	return (
 		<Line
 			points={points}
@@ -251,31 +284,19 @@ export function Room({
 
 			<Wall id="back" mode={wallMode} texture={wallTex} roomRef={roomRef} />
 			<Wall id="left" mode={wallMode} texture={wallTex} roomRef={roomRef} />
-			<Wall id="right" mode={wallMode} texture={wallTex} roomRef={roomRef} />
-			<Wall id="front" mode={wallMode} texture={wallTex} roomRef={roomRef}>
-				{/* Door frame */}
-				<mesh
-					position={[DOOR.x - 1.5, DOOR.height / 2, D + T / 2]}
-					material={materials.wallWhite}
-				>
-					<boxGeometry args={[3, DOOR.height, T + 2]} />
-				</mesh>
-				<mesh
-					position={[doorRight + 1.5, DOOR.height / 2, D + T / 2]}
-					material={materials.wallWhite}
-				>
-					<boxGeometry args={[3, DOOR.height, T + 2]} />
-				</mesh>
-				<mesh
-					position={[DOOR.x + DOOR.width / 2, DOOR.height + 1.5, D + T / 2]}
-					material={materials.wallWhite}
-				>
-					<boxGeometry args={[DOOR.width + 6, 3, T + 2]} />
-				</mesh>
-				<Door open={doorOpen} />
+			<Wall id="front" mode={wallMode} texture={wallTex} roomRef={roomRef} />
+			<Wall id="right" mode={wallMode} texture={wallTex} roomRef={roomRef}>
+				<group {...DOOR_FRAME}>
+					<DoorFrame />
+					<Door open={doorOpen} />
+				</group>
 			</Wall>
 
-			{showDoorSwing && <DoorSwing />}
+			{showDoorSwing && (
+				<group {...DOOR_FRAME}>
+					<DoorSwing />
+				</group>
+			)}
 		</group>
 	);
 }
