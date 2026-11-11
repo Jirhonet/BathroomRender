@@ -150,6 +150,8 @@ export function Planner() {
 	const [layout, setLayout] = useState<Layout>(DEFAULT_LAYOUT);
 	const [loaded, setLoaded] = useState(false);
 	const [selected, setSelected] = useState<FixtureId | null>(null);
+	// Only affects small screens; the panel is always shown from `md` up.
+	const [panelOpen, setPanelOpen] = useState(false);
 	const [view, setView] = useState<{ name: ViewName; nonce: number }>({
 		name: "perspective",
 		nonce: 0,
@@ -272,15 +274,69 @@ export function Planner() {
 				/>
 			</div>
 
+			{/* Menu toggle (small screens only) */}
+			{!panelOpen && (
+				<button
+					type="button"
+					onClick={() => setPanelOpen(true)}
+					aria-label="Open menu"
+					aria-expanded={false}
+					aria-controls="control-panel"
+					className="absolute left-3 top-3 z-30 flex items-center gap-2 rounded-full border border-white/60 bg-white/90 px-4 py-2.5 text-sm font-medium text-slate-800 shadow-lg backdrop-blur-md md:hidden"
+				>
+					<svg
+						viewBox="0 0 20 20"
+						className="h-4 w-4"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						aria-hidden="true"
+					>
+						<path d="M3 5h14M3 10h14M3 15h14" />
+					</svg>
+					Menu
+					{selected && (
+						<span className="max-w-[40vw] truncate rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
+							{FIXTURES[selected].name}
+						</span>
+					)}
+				</button>
+			)}
+
 			{/* Control panel */}
-			<aside className="absolute left-3 top-3 bottom-3 flex w-[300px] max-w-[calc(100vw-24px)] flex-col gap-4 overflow-y-auto rounded-2xl border border-white/60 bg-white/85 p-4 shadow-xl backdrop-blur-md max-sm:bottom-auto max-sm:max-h-[55dvh]">
-				<header>
-					<h1 className="text-lg font-semibold text-slate-900">
-						Bathroom mockup
-					</h1>
-					<p className="text-xs text-slate-500">
-						{ROOM.width} × {ROOM.depth} cm · ceiling {ROOM.height} cm · to scale
-					</p>
+			<aside
+				id="control-panel"
+				className={`${panelOpen ? "flex" : "hidden"} absolute left-3 top-3 bottom-3 z-30 w-[300px] max-w-[calc(100vw-24px)] flex-col gap-4 overflow-y-auto rounded-2xl border border-white/60 bg-white/90 p-4 shadow-xl backdrop-blur-md max-md:bottom-auto max-md:max-h-[70dvh] md:flex md:bg-white/85`}
+			>
+				<header className="flex items-start justify-between gap-3">
+					<div>
+						<h1 className="text-lg font-semibold text-slate-900">
+							Bathroom mockup
+						</h1>
+						<p className="text-xs text-slate-500">
+							{ROOM.width} × {ROOM.depth} cm · ceiling {ROOM.height} cm · to
+							scale
+						</p>
+					</div>
+					<button
+						type="button"
+						onClick={() => setPanelOpen(false)}
+						aria-label="Close menu"
+						className="-mr-1 -mt-1 rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 md:hidden"
+					>
+						<svg
+							viewBox="0 0 20 20"
+							className="h-4 w-4"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							aria-hidden="true"
+						>
+							<path d="M5 5l10 10M15 5L5 15" />
+						</svg>
+					</button>
 				</header>
 
 				<section className="flex flex-col gap-2">
